@@ -1,0 +1,124 @@
+<?php
+
+// app/Controllers/Auth.php
+namespace App\Controllers;
+use App\Models\UserModel;
+use CodeIgniter\Controller;
+
+class Auth extends Controller {
+    public function login() {
+        helper(['form']);
+        if ($this->request->getMethod() === 'post') {
+            $model = new UserModel();
+            $user = $model->where('username', $this->request->getPost('username'))->first();
+            if ($user && password_verify($this->request->getPost('password'), $user['password'])) {
+                session()->set(['user_id' => $user['id'], 'username' => $user['username']]);
+                return redirect()->to('/tugas');
+            }
+            return redirect()->back()->with('error', 'Login gagal');
+        }
+        return view('auth/login');
+    }
+
+    public function register() {
+        helper(['form']);
+        if ($this->request->getMethod() === 'post') {
+            $model = new UserModel();
+            $data = [
+                'username' => $this->request->getPost('username'),
+                'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+            ];
+            $model->insert($data);
+            return redirect()->to('/login');
+        }
+        return view('auth/register');
+    }
+
+    public function logout() {
+        session()->destroy();
+        return redirect()->to('/login');
+    }
+}
+
+// app/Controllers/Tugas.php
+namespace App\Controllers;
+use App\Models\TugasModel;
+use CodeIgniter\Controller;
+
+class Tugas extends Controller {
+    public function index() {
+        $model = new TugasModel();
+        $data['tugas'] = $model->where('user_id', session()->get('user_id'))->findAll();
+        return view('tugas/index', $data);
+    }
+
+    public function tambah() {
+        if ($this->request->getMethod() === 'post') {
+            $model = new TugasModel();
+            $model->save([
+                'judul' => $this->request->getPost('judul'),
+                'deskripsi' => $this->request->getPost('deskripsi'),
+                'deadline' => $this->request->getPost('deadline'),
+                'status' => $this->request->getPost('status'),
+                'user_id' => session()->get('user_id'),
+            ]);
+            return redirect()->to('/tugas');
+        }
+        return view('tugas/tambah');
+    }
+
+    public function edit($id) {
+        $model = new TugasModel();
+        if ($this->request->getMethod() === 'post') {
+            $model->update($id, [
+                'judul' => $this->request->getPost('judul'),
+                'deskripsi' => $this->request->getPost('deskripsi'),
+                'deadline' => $this->request->getPost('deadline'),
+                'status' => $this->request->getPost('status'),
+            ]);
+            return redirect()->to('/tugas');
+        }
+        $data['tugas'] = $model->find($id);
+        return view('tugas/edit', $data);
+    }
+
+    public function hapus($id) {
+        $model = new TugasModel();
+        $model->delete($id);
+        return redirect()->to('/tugas');
+    }
+}
+
+// app/Models/UserModel.php
+namespace App\Models;
+use CodeIgniter\Model;
+
+class UserModel extends Model {
+    protected $table = 'users';
+    protected $allowedFields = ['username', 'password'];
+    protected $useTimestamps = false;
+}
+
+// app/Models/TugasModel.php
+namespace App\Models;
+use CodeIgniter\Model;
+
+class TugasModel extends Model {
+    protected $table = 'tugas';
+    protected $allowedFields = ['judul', 'deskripsi', 'deadline', 'status', 'user_id'];
+    protected $useTimestamps = false;
+}
+
+// app/Config/Routes.php
+$routes->get('/login', 'Auth::login');
+$routes->post('/login', 'Auth::login');
+$routes->get('/register', 'Auth::register');
+$routes->post('/register', 'Auth::register');
+$routes->get('/logout', 'Auth::logout');
+
+$routes->get('/tugas', 'Tugas::index');
+$routes->get('/tugas/tambah', 'Tugas::tambah');
+$routes->post('/tugas/tambah', 'Tugas::tambah');
+$routes->get('/tugas/edit/(:num)', 'Tugas::edit/$1');
+$routes->post('/tugas/edit/(:num)', 'Tugas::edit/$1');
+$routes->get('/tugas/hapus/(:num)', 'Tugas::hapus/$1');
