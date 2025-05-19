@@ -1,0 +1,30 @@
+Berikut struktur folder implementasi aplikasi manajemen tugas mahasiswa:
+- app/Controllers/Auth.php
+- app/Controllers/Tugas.php
+- app/Models/UserModel.php
+- app/Models/TugasModel.php
+- app/Views/auth/login.php
+- app/Views/auth/register.php
+- app/Views/tugas/index.php
+- app/Views/tugas/tambah.php
+- app/Views/tugas/edit.php
+- public/index.php
+- app/Config/Routes.php
+
+Penjelasan singkat dan isi file utama:
+
+Controllers/Auth.php:
+- Fungsi login, register, logout dengan session dan validasi.
+
+Controllers/Tugas.php:
+- Fungsi index menampilkan semua tugas.
+- Fungsi tambah, edit, dan hapus tugas.
+
+Models/UserModel.php:
+- Model untuk tabel users.
+
+Models/TugasModel.php:
+- Model untuk tabel tugas.
+
+Config/Routes.php:
+- Routing untuk semua halaman.
